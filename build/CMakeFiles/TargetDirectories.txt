@@ -1,0 +1,3 @@
+/Users/pierluigiferrari/git/MPC_controller/build/CMakeFiles/rebuild_cache.dir
+/Users/pierluigiferrari/git/MPC_controller/build/CMakeFiles/edit_cache.dir
+/Users/pierluigiferrari/git/MPC_controller/build/CMakeFiles/mpc.dir
