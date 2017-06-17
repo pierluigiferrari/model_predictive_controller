@@ -92,6 +92,19 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
+          // Compensate for an expected latency of 100 ms
+          // by predicting the car's state in 100 ms.
+          //
+          double latency = 0.1; // The expected latency is 100 ms
+          double delta = j[1]["steering_angle"];
+          double a = j[1]["throttle"]; // Terrible approximation
+          double Lf = 2.67;
+          double v_mps = v * 0.44704; // velocity converted from mph to meters per second
+          px += v_mps * cos(psi) * latency;
+          py += v_mps * sin(psi) * latency;
+          psi -= v_mps * delta / Lf * latency;
+          v_mps += a * latency;
+
           /*
           * TODO: Calculate steering angle and throttle using MPC.
           *
@@ -117,8 +130,10 @@ int main() {
           vector<double> ptsx_vehicle = vector<double>(ptsx.size());
           vector<double> ptsy_vehicle = vector<double>(ptsy.size());
           for (int i = 0; i < ptsx.size(); i++) {
-            ptsx_vehicle[i] = (ptsx[i] - px) * cos(psi) + (ptsy[i] - py) * sin(psi);
-            ptsy_vehicle[i] = - (ptsx[i] - px) * sin(psi) + (ptsy[i] - py) * cos(psi);
+            double x_trans = ptsx[i] - px;
+            double y_trans = ptsy[i] - py;
+            ptsx_vehicle[i] = x_trans * cos(psi) + y_trans * sin(psi);
+            ptsy_vehicle[i] = -x_trans * sin(psi) + y_trans * cos(psi);
           }
 
           // Fit a polynomial.
@@ -152,7 +167,7 @@ int main() {
           // Since the state is in vehicle coordinates, the vehicle's current position from
           // its own perspective is always x = y = psi = 0.
           // The simulator returns the speed in mph, but we want it in meters per second (mps), so we convert it.
-          double v_mps = v * 0.44704;
+          // double v_mps = v * 0.44704;
           Eigen::VectorXd state(6);
           state << 0.0, 0.0, 0.0, v_mps, cte, epsi;
 
@@ -164,8 +179,7 @@ int main() {
           // otherwise the value would be in [-deg2rad(25), deg2rad(25)] instead of [-1, 1],
           // because we set the boundaries of the steering angle in the optimizer to
           // [-deg2rad(25), deg2rad(25)].
-          // double Lf = 2.67;
-          double steer_value = result[0] / deg2rad(25);
+          double steer_value = -result[0] / deg2rad(25);
           double throttle_value = result[1];
 
           std::cout << "Control steer_value: " << steer_value << std::endl;

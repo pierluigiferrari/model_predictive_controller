@@ -21,7 +21,7 @@ const double dt = 0.1;
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
 
-const double ref_v = 100.0;
+const double ref_v = 70.0 * 0.44704; // The target speed in mph
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should establish
@@ -52,8 +52,8 @@ class FG_eval {
 
     // Reference State Cost
     for (int t = 0; t < N; t++) {
-      fg[0] += 2000 * CppAD::pow(vars[cte_start + t], 2);
-      fg[0] += 2000 * CppAD::pow(vars[epsi_start + t], 2);
+      fg[0] += 100 * CppAD::pow(vars[cte_start + t], 2);
+      fg[0] += 100 * CppAD::pow(vars[epsi_start + t], 2);
       // The target velocity at time step t depends on the steering angle at time step t.
       // The minimum velocity is 30.0 mph.
       //AD<double> target_v = 30.0 + 50.0 * (1.0 - fabs(vars[delta_start + t]));
@@ -62,13 +62,13 @@ class FG_eval {
 
     // Actuator use cost, i.e. minimize the use of actuators for a smoother drive
     for (int t = 0; t < N - 1; t++) {
-      fg[0] += 200 * CppAD::pow(vars[delta_start + t], 2);
+      fg[0] += 10000 * CppAD::pow(vars[delta_start + t], 2);
       fg[0] += 5 * CppAD::pow(vars[a_start + t], 2);
     }
 
     // Actuator change rate cost, i.e. minimize the change in actuator use for a smoother drive
     for (int t = 0; t < N - 2; t++) {
-      fg[0] += 400 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+      fg[0] += 10000 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
       fg[0] += 10 * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
 
@@ -93,6 +93,14 @@ class FG_eval {
       // CppAD can compute derivatives and pass
       // these to the solver.
 
+      // State at time t + 1
+      AD<double> x1 = vars[x_start + t + 1];
+      AD<double> y1 = vars[y_start + t + 1];
+      AD<double> psi1 = vars[psi_start + t + 1];
+      AD<double> v1 = vars[v_start + t + 1];
+      AD<double> cte1 = vars[cte_start + t + 1];
+      AD<double> epsi1 = vars[epsi_start + t + 1];
+
       // State at time t
       AD<double> x0 = vars[x_start + t];
       AD<double> y0 = vars[y_start + t];
@@ -100,14 +108,6 @@ class FG_eval {
       AD<double> v0 = vars[v_start + t];
       AD<double> cte0 = vars[cte_start + t];
       AD<double> epsi0 = vars[epsi_start + t];
-
-      // State at time t + 1
-      AD<double> x1 = vars[x_start + t + 1];
-      AD<double> y1 = vars[y_start + t + 1];
-      AD<double> psi1 = vars[psi_start + t];
-      AD<double> v1 = vars[v_start + t + 1];
-      AD<double> cte1 = vars[cte_start + t + 1];
-      AD<double> epsi1 = vars[epsi_start + t + 1];
 
       // Actuation at time t
       AD<double> delta0 = vars[delta_start + t];
@@ -122,10 +122,10 @@ class FG_eval {
       // Formulate all model constraints to take the form c - g(x) = 0
       fg[2 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
       fg[2 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
-      fg[2 + psi_start + t] = psi1 - (psi0 - v0 / Lf * delta0 * dt);
+      fg[2 + psi_start + t] = psi1 - (psi0 + v0 * delta0 / Lf * dt);
       fg[2 + v_start + t] = v1 - (v0 + a0 * dt);
       fg[2 + cte_start + t] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(epsi0) * dt)); // Using (f0 - y0) for the cte is a pretty terrible approximation, especially for sharper turns, but we'll keep it for now.
-      fg[2 + epsi_start + t] = epsi1 - ((psi0 - psides0) - v0 * delta0 / Lf * dt);
+      fg[2 + epsi_start + t] = epsi1 - ((psi0 - psides0) + v0 * delta0 / Lf * dt);
     }
   }
 };
