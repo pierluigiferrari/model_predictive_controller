@@ -21,7 +21,7 @@ const double dt = 0.1;
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
 
-const double ref_v = 50.0 * 0.44704; // The target speed in meters per second
+const double ref_v = 50.0 * 0.44704; // The target speed in meters per second. The controller works well up to 80 mph.
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should establish
