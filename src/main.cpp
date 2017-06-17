@@ -93,17 +93,18 @@ int main() {
           double v = j[1]["speed"];
 
           // Compensate for an expected latency of 100 ms
-          // by predicting the car's state in 100 ms.
+          // by predicting the car's state in 100 ms using
+          // the vehicle model.
           //
           double latency = 0.1; // The expected latency is 100 ms
           double delta = j[1]["steering_angle"];
           double a = j[1]["throttle"]; // Terrible approximation
           double Lf = 2.67;
-          double v_mps = v * 0.44704; // velocity converted from mph to meters per second
-          px += v_mps * cos(psi) * latency;
-          py += v_mps * sin(psi) * latency;
-          psi -= v_mps * delta / Lf * latency;
-          v_mps += a * latency;
+          v *= 0.44704; // The model needs the velocity converted from mph to meters per second
+          px += v * cos(psi) * latency;
+          py += v * sin(psi) * latency;
+          psi -= v * delta / Lf * latency;
+          v += a * latency;
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.
@@ -169,7 +170,7 @@ int main() {
           // The simulator returns the speed in mph, but we want it in meters per second (mps), so we convert it.
           // double v_mps = v * 0.44704;
           Eigen::VectorXd state(6);
-          state << 0.0, 0.0, 0.0, v_mps, cte, epsi;
+          state << 0.0, 0.0, 0.0, v, cte, epsi;
 
           // Run the optimizer.
           vector<double> result = mpc.Solve(state, coeffs);

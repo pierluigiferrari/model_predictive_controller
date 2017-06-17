@@ -21,7 +21,7 @@ const double dt = 0.1;
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
 
-const double ref_v = 70.0 * 0.44704; // The target speed in mph
+const double ref_v = 50.0 * 0.44704; // The target speed in meters per second
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should establish
@@ -43,17 +43,14 @@ class FG_eval {
 
   typedef CPPAD_TESTVECTOR(AD<double>) ADvector;
   void operator()(ADvector& fg, const ADvector& vars) {
-    // TODO: implement MPC
     // `fg` a vector of the cost constraints, `vars` is a vector of variable values (state & actuators)
-    // NOTE: You'll probably go back and forth between this function and
-    // the Solver function below.
 
     fg[0] = 0;
 
     // Reference State Cost
     for (int t = 0; t < N; t++) {
-      fg[0] += 100 * CppAD::pow(vars[cte_start + t], 2);
-      fg[0] += 100 * CppAD::pow(vars[epsi_start + t], 2);
+      fg[0] += 1000 * CppAD::pow(vars[cte_start + t], 2);
+      fg[0] += 20000 * CppAD::pow(vars[epsi_start + t], 2);
       // The target velocity at time step t depends on the steering angle at time step t.
       // The minimum velocity is 30.0 mph.
       //AD<double> target_v = 30.0 + 50.0 * (1.0 - fabs(vars[delta_start + t]));
@@ -63,13 +60,13 @@ class FG_eval {
     // Actuator use cost, i.e. minimize the use of actuators for a smoother drive
     for (int t = 0; t < N - 1; t++) {
       fg[0] += 10000 * CppAD::pow(vars[delta_start + t], 2);
-      fg[0] += 5 * CppAD::pow(vars[a_start + t], 2);
+      fg[0] += CppAD::pow(vars[a_start + t], 2);
     }
 
     // Actuator change rate cost, i.e. minimize the change in actuator use for a smoother drive
     for (int t = 0; t < N - 2; t++) {
-      fg[0] += 10000 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-      fg[0] += 10 * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
+      fg[0] += 40000 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+      fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
 
     // Set up the constraints
