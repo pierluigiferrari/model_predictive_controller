@@ -61,11 +61,13 @@ The hyper parameters of the controller and their chosen values are explained bel
 
 ## 4. Implementation
 
-This section contains a brief explanation of some design details of this controller implementation. For a general explanation of MPC, see [here](https://en.wikipedia.org/wiki/Model_predictive_control).
+This section contains a brief explanation of some design details of this controller implementation. For a general explanation of model predictive control, see [here](https://en.wikipedia.org/wiki/Model_predictive_control).
 
 The MPC solves control as an optimization problem. Using an appropriate motion model, it computes a vehicle's predicted state for a finite number of time steps in the future. The optimization problem consists of choosing the vehicle's actuator controls (throttle/braking and steering) so that the computed state at each time step is as close as possible to the desired state of the reference trajectory.
 
 ### 4.1 General code layout
+
+Note: The program works well, but the code needs to be refactored.
 
 The controller itself consists of two main building blocks:
 
