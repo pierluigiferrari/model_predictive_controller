@@ -21,7 +21,7 @@ const double dt = 0.1;
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
 
-const double ref_v = 50.0 * 0.44704; // The target speed in meters per second. The controller works well up to 80 mph.
+const double ref_v = 70.0 * 0.44704; // The target speed in meters per second. The controller works well up to 80 mph.
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should establish
@@ -49,17 +49,17 @@ class FG_eval {
 
     // Reference State Cost
     for (int t = 0; t < N; t++) {
-      fg[0] += 1000 * CppAD::pow(vars[cte_start + t], 2);
+      fg[0] += 100 * CppAD::pow(vars[cte_start + t], 2);
       fg[0] += 20000 * CppAD::pow(vars[epsi_start + t], 2);
       // The target velocity at time step t depends on the steering angle at time step t.
       // The minimum velocity is 30.0 mph.
       //AD<double> target_v = 30.0 + 50.0 * (1.0 - fabs(vars[delta_start + t]));
-      fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
+      fg[0] += 1000 * CppAD::pow(vars[v_start + t] - ref_v, 2);
     }
 
     // Actuator use cost, i.e. minimize the use of actuators for a smoother drive
     for (int t = 0; t < N - 1; t++) {
-      fg[0] += 10000 * CppAD::pow(vars[delta_start + t], 2);
+      fg[0] += 50000 * CppAD::pow(vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t], 2);
     }
 
@@ -116,7 +116,28 @@ class FG_eval {
       AD<double> df0 = coeffs[1] + 2 * coeffs[2] * x0 + 3 * coeffs[3] * CppAD::pow(x0, 2);
       AD<double> psides0 = CppAD::atan(df0);
 
-      // Formulate all model constraints to take the form c - g(x) = 0
+      // These are the equations of the kinematic vehicle model being used here:
+      //
+      // x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
+      // y_[t+1] = y[t] + v[t] * sin(psi[t]) * dt
+      // psi_[t+1] = psi[t] + v[t] / Lf * delta[t] * dt
+      // v_[t+1] = v[t] + a[t] * dt
+      // cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
+      // epsi[t+1] = psi[t] - psides[t] + v[t] * delta[t] / Lf * dt
+      //
+      // where x and y are the position of the vehicle, 'psi' is the vehicle's orientation
+      // angle, v is the scalar velocity, 'cte' is the cross-track error (or rather an
+      // approximation to it), which is the orthogonal distance between the reference trajectory
+      // and the vehicle position, and 'epsi' is the error between the vehicle's actual
+      // orientation angle psi and the orientation angle it should have if it did follow
+      // the reference trajectory, 'psides'.
+      //
+      // 'dt' is the length of one time step in the model, 'delta' is the input steering angle,
+      // 'a' is the input acceleration, and 'Lf' is a constant describing the distance between
+      // the vehicle's center of gravity and its front wheels.
+      //
+      // Next, formulate all model constraints to take the form c - g(x) = 0.
+      //
       fg[2 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
       fg[2 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
       fg[2 + psi_start + t] = psi1 - (psi0 + v0 * delta0 / Lf * dt);

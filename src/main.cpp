@@ -96,9 +96,10 @@ int main() {
           // by predicting the car's state in 100 ms using
           // the vehicle model.
           //
-          double latency = 0.1; // The expected latency is 100 ms
+          double latency = 0.1; // Set the expected latency here.
           double delta = j[1]["steering_angle"];
-          double a = j[1]["throttle"]; // Terrible approximation
+          std::cout << "Steering angle from simulator: " << delta << std::endl;
+          double a = j[1]["throttle"]; // Terrible approximation, throttle is not acceleration. But this is all the information we have at hand.
           double Lf = 2.67;
           v *= 0.44704; // The model needs the velocity converted from mph to meters per second
           px += v * cos(psi) * latency;
@@ -182,9 +183,6 @@ int main() {
           // [-deg2rad(25), deg2rad(25)].
           double steer_value = -result[0] / deg2rad(25);
           double throttle_value = result[1];
-
-          std::cout << "Control steer_value: " << steer_value << std::endl;
-          std::cout << "Control throttle_value: " << throttle_value << std::endl;
 
           json msgJson;
 
