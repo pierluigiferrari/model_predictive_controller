@@ -107,13 +107,6 @@ int main() {
           psi -= v * delta / Lf * latency;
           v += a * latency;
 
-          /*
-          * TODO: Calculate steering angle and throttle using MPC.
-          *
-          * Both are in between [-1, 1].
-          *
-          */
-
           // Convert waypoints to vehicle coordinates.
           //
           // Note: Transforming from map coordinates to vehicle coordinates is the
@@ -189,7 +182,8 @@ int main() {
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = throttle_value;
 
-          //Display the MPC predicted trajectory 
+          //Display the MPC predicted trajectory
+
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
           for (int i = 2; i < result.size(); i++) {
@@ -197,7 +191,7 @@ int main() {
             else mpc_y_vals.push_back(result[i]);
           }
 
-          //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
+          // Add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
 
           msgJson["mpc_x"] = mpc_x_vals;
@@ -205,7 +199,7 @@ int main() {
 
           //Display the waypoints/reference line
 
-          //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
+          // Add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
 
           vector<double> ref_x_vals;
@@ -228,11 +222,6 @@ int main() {
           // The purpose is to mimic real driving conditions where
           // the car does actuate the commands instantly.
           //
-          // Feel free to play around with this value but should be to drive
-          // around the track with 100ms latency.
-          //
-          // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
-          // SUBMITTING.
           this_thread::sleep_for(chrono::milliseconds(100));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
@@ -244,16 +233,15 @@ int main() {
     }
   });
 
-  // We don't need this since we're not using HTTP but if it's removed the
-  // program
-  // doesn't compile :-(
+  // We don't need this since we're not using HTTP but if it's removed, the
+  // program doesn't compile :-(
   h.onHttpRequest([](uWS::HttpResponse *res, uWS::HttpRequest req, char *data,
                      size_t, size_t) {
     const std::string s = "<h1>Hello world!</h1>";
     if (req.getUrl().valueLength == 1) {
       res->end(s.data(), s.length());
     } else {
-      // i guess this should be done more gracefully?
+      // I guess this should be done more gracefully?
       res->end(nullptr, 0);
     }
   });
