@@ -62,16 +62,16 @@ The hyper parameters of the controller and their chosen values are explained bel
 
 This section contains a brief explanation of some design details of this controller implementation. For a general explanation of model predictive control, see [here](https://en.wikipedia.org/wiki/Model_predictive_control).
 
-The MPC solves control as an optimization problem. Using an appropriate motion model, it computes a vehicle's predicted state for a finite number of time steps in the future. The optimization problem consists of choosing the vehicle's actuator controls (throttle/braking and steering) so that the computed state at each time step is as close as possible to the desired state of the reference trajectory.
+MPC solves control as an optimization problem. Using an appropriate motion model, it computes a vehicle's predicted state for a finite number of time steps in the future. The optimization problem consists of choosing the vehicle's actuator controls (throttle/braking and steering) so that the predicted state at each time step given the motion model is as close as possible to the desired state of the reference trajectory.
 
 ### 4.1 General code layout
 
-Note: The program works well, but the code needs to be refactored.
+Note: The program works, but the code needs to be refactored.
 
 The controller itself consists of two main building blocks:
 
-1. The MPC class, whose only member is a `Solve()` method. This method uses the Ipopt library linked above to solve the optimization problem of finding the optimal sequence of throttle and steering actuations for a discrete, finite number of time steps in order for a vehicle to follow a given reference trajectory.
-2. The FG_eval class, an instance of which is passed to the `Solve()` method of the MPC class. The FG_eval object defines the cost function and the variable constraints of the optimization problem. The variable constraints are based on a kinematic vehicle motion model. You can find the definition of the motion model in the comments of the FG_eval class.
+1. The `MPC` class, whose only member is a `Solve()` method. This method uses the Ipopt library linked above to solve the optimization problem of finding the optimal sequence of throttle and steering actuations for a finite number of time steps in order for a vehicle to follow a given reference trajectory.
+2. The `FG_eval` class, an instance of which is passed to the `Solve()` method of the MPC class. The `FG_eval` object defines the cost function and the variable constraints of the optimization problem. The variable constraints are given by a kinematic vehicle motion model. You can find the definition of the motion model in the in-line comments of the `FG_eval` class.
 
 ### 4.2 The cost function
 
@@ -89,7 +89,7 @@ The optimizer seeks to minimize all of the above. Minimization of the last four 
 
 ### 4.3 Cost function weights
 
-Each of the cost function components is weighted. The following weights were found to work well up to a target speed of 80 mph:
+The individual cost function components are weighted according to the following weights, which were found to work well up to a target speed of 80 mph:
 
 | Component            | Value   |
 | -------------------- | ------- |
@@ -103,32 +103,32 @@ Each of the cost function components is weighted. The following weights were fou
 
 Explanation:
 
-While it might seem intuitive to assign a large weight to the cross-track error, the orientation error is actually a lot more important for a smooth driving experience if we can afford to deviate slightly from the reference trajectory, which in this race track scenario, we can. If the weight of the cross-track error is very large, the controller will aggressively try to steer back exactly to the reference trajectory. In this scenario though, we care more about the car heading in the **direction** of the reference trajectory rather than the car being precisely **on** the reference trajectory. In a regular street traffic scenario, following the reference trajectory extremely closely will usually be critical, so that different a higher CTE weight would be appropriate in this case.
+While it might seem intuitive to assign a large weight to the cross-track error, the orientation error is actually a lot more important for a smooth driving experience if we can afford to deviate slightly from the reference trajectory, which, in this race track scenario, we can. If the weight of the cross-track error is very large, the controller will aggressively try to steer back exactly to the reference trajectory. In this scenario though, we care more about the car heading in the **direction** of the reference trajectory rather than the car being precisely **on** the reference trajectory. In a regular street traffic scenario, following the reference trajectory extremely closely will usually be critical, so that a higher CTE weight would be appropriate in this case.
 
 The high values for the steering value and the steering change rate force the controller to follow a smooth trajectory. Keeping the steering values minimal means the optimizer will prefer a sequence of many small steering actuations over few large steering actuations. Keeping the steering angle change rate minimal means the optimizer will prefer smooth turns over abrupt turns. These two weights are the single most important weights in this cost function.
 
-There is one thing to note though: While larger weights for steering value and steering change rate lead to smoother driving behavior, at a certain point the number of optimization time steps needs to be increased in order to obtain a good solution. If the controller is allowed to turn less and less strongly and less and less abruptly, then it needs to look further into the future in order to plan further ahead. You can see in the video linked below that my choice of weights leads the car reacting too late to sharp turns, because the optimizer is forced to steer softly initially and only once the car is already in the middle of the sharp turn, the optimizer "realizes" that more extreme steering angles are needed. A longer time horizon would ameliorate this issue, but my laptop CPU is too weak for that.
+There is one thing to note though: While larger weights for steering value and steering change rate lead to smoother driving behavior, at a certain point the number of optimization time steps needs to be increased in order to obtain a good solution. If the controller is allowed to turn less and less strongly and less and less abruptly, then it needs to look further into the future in order to plan further ahead. You can see in the video linked below that my choice of weights leads the car to react too late to sharp turns, because the optimizer is forced to steer softly initially and only once the car is already in the middle of the sharp turn, the optimizer "realizes" that more extreme steering angles are needed. A longer time horizon would ameliorate this issue, but my laptop CPU is too weak for that.
 
 ### 4.4 Optimization time horizon
 
-The model computes the vehicle state at N = 10 time steps in the future, where each time step has a length of dt = 0.1 seconds, i.e the model takes into account the next 1.0 seconds for which to compute the optimal sequence of actuations. These values are defined at the top of MPC.cpp.
+The model computes the vehicle state at `N = 10` time steps in the future, where each time step has a length of `dt = 0.1` seconds, i.e the model takes into account the next 1.0 seconds for which to compute the optimal sequence of actuations. These values are defined at the top of `MPC.cpp`.
 
-There is a trade-off to take into account for both of these values. Increasing the number of time steps N allows the optimizer to take a longer stretch of the future reference trajectory into account when computing the optimal actuation values for the present, but it also increases the computation time for the optimizer, a critical factor for a controller that needs to run in real time. The added value of looking into the future beyond a certain time frame will be negligible, since (1) the inaccuracy of any given motion model will make computations too far into the future pointless and (2) at most normal driving speeds the next one or two seconds will take into account enough of the reference path ahead to make good actuation decisions. Insofar, keeping the computation time to a minimum weighs heavier than the added value of increasing the number of time steps.
+There is a trade-off to take into account for both of these values. Increasing the number of time steps `N` allows the optimizer to take a longer stretch of the future reference trajectory into account when computing the optimal actuation values for the present, but it also increases the computation time for the optimizer, a critical factor for a controller that needs to run in real time. The added value of looking into the future beyond a certain time frame will be negligible, since (1) the inaccuracy of any given motion model will make computations too far into the future pointless and (2) at most normal driving speeds the next one or two seconds will take into account enough of the reference path ahead to make good actuation decisions. Insofar, keeping the computation time to a minimum weighs heavier than the added value of increasing the number of time steps.
 
 As with any discrete approximation to a continuous problem, increasing the resolution improves the approximation. Decreasing the duration of the time steps allows more frequent actuations and hence better optimization results, but it also decreases the future time frame taken into account for any fixed number of time steps. 0.1 seconds turns out to be a sufficient temporal resolution.
 
-Before choosing these final values, I tried 20 time steps of both 0.05 and 0.1 seconds, but the computational cost was too high given the moderate improvement. My weak laptop CPU already affects other aspects of the real-time optimization to an extent so that increasing N and decreasing dt doesn't move the needle much.
+Before choosing these final values, I tried 20 time steps of both 0.05 and 0.1 seconds, but the computational cost was too high given the moderate improvement. My weak laptop CPU already affects other aspects of the real-time optimization to an extent such that increasing `N` and decreasing `dt` doesn't move the needle much.
 
 ### 4.5 Coordinate transformations
 
 The optimizer works entirely with vehicle coordinates (as opposed to map coordinates), i.e. with a Cartesian coordinate system that has the vehicle at its origin, where the x-axis points in the direction of the vehicle's heading, the y-axis points to the left, and the vehicle's orientation is measured against the positive x-axis with counter-clockwise angles being positive.
 
-Since the simulator provides the reference trajectory points in global map coordinates, these need to be transformed into vehicle coordinates. This transformation is performed and explained in lines 116-138 of main.cpp.
+Since the simulator provides the reference trajectory points in global map coordinates, these need to be transformed into vehicle coordinates. This transformation is performed and explained in lines 116-138 of `main.cpp`.
 
 ### 4.6 Latency
 
 The model is able to compensate for systemic latency. This is done by projecting each measured vehicle state into the future by the latency time using the vehicle motion model. This projected state is then used as the current state.
 
-The latency compensation is performed in lines 95-107 of main.cpp. The simulator has a built-in systemic latency of 100 milliseconds. The implemented compensation yields a drastic improvement in the controller's quality.
+The latency compensation is performed in lines 95-107 of `main.cpp`. The simulator has a built-in systemic latency of 100 milliseconds. The implemented compensation yields a drastic improvement in the controller's quality.
 
 If the latency were not compensated for, the vehicle's next actuation value computed by the optimizer would be based on the vehicle's past state instead of its present state and thus erroneous. The effect would be that the vehicle would oscillate around the reference trajectory.
