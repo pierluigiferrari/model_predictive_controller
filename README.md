@@ -1,5 +1,5 @@
-# MPC Controller
-This is a simple model predictive controller (MPC) for 2D trajectories implemented in C++.
+# Model Predictive Controller
+This is a model predictive controller (MPC) for 2D vehicle trajectories implemented in C++.
 
 ---
 
@@ -9,15 +9,15 @@ The controller steers a car around a race track in the simulator linked below. T
 ## 1. Dependencies
 
 * cmake >= 3.5
- * All OSes: [click here for installation instructions](https://cmake.org/install/)
+  * All operating systems: [Click here for installation instructions](https://cmake.org/install/)
 * make >= 4.1
-  * Linux: make is installed by default on most Linux distros
-  * Mac: [install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
+  * Linux: `make` is installed by default on most Linux distros
+  * Mac: [Install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
   * Windows: [Click here for installation instructions](http://gnuwin32.sourceforge.net/packages/make.htm)
 * gcc/g++ >= 5.4
-  * Linux: gcc / g++ is installed by default on most Linux distros
-  * Mac: same deal as make - [install Xcode command line tools]((https://developer.apple.com/xcode/features/)
-  * Windows: recommend using [MinGW](http://www.mingw.org/)
+  * Linux: `gcc` / `g++` is installed by default on most Linux distros
+  * Mac: Same deal as `make` - [install Xcode command line tools]((https://developer.apple.com/xcode/features/)
+  * Windows: It is recommended to use [MinGW](http://www.mingw.org/)
 * [uWebSockets](https://github.com/uWebSockets/uWebSockets): Handles the communication between the program and the simulator.
   * Run either `install-mac.sh` or `install-ubuntu.sh`.
   * If you install from source, checkout to commit `e94b6e1`, i.e.
@@ -29,19 +29,19 @@ The controller steers a car around a race track in the simulator linked below. T
     Some function signatures have changed in v0.14.x. See [this PR](https://github.com/udacity/CarND-MPC-Project/pull/3) for more details.
 * Fortran Compiler
   * Mac: `brew install gcc` (might not be required)
-  * Linux: `sudo apt-get install gfortran`. Additionall you have also have to install gcc and g++, `sudo apt-get install gcc g++`. Look in [this Dockerfile](https://github.com/udacity/CarND-MPC-Quizzes/blob/master/Dockerfile) for more info.
+  * Linux: `sudo apt-get install gfortran`. Additionally you also have to install `gcc` and `g++`, `sudo apt-get install gcc g++`. Look in [this Dockerfile](https://github.com/udacity/CarND-MPC-Quizzes/blob/master/Dockerfile) for more info.
 * [Ipopt](https://projects.coin-or.org/Ipopt)
   * Mac: `brew install ipopt`
   * Linux
-    * You will need a version of Ipopt 3.12.1 or higher. The version available through `apt-get` is 3.11.x. If you can get that version to work great but if not there's a script `install_ipopt.sh` that will install Ipopt. You just need to download the source from the Ipopt [releases page](https://www.coin-or.org/download/source/Ipopt/) or the [Github releases](https://github.com/coin-or/Ipopt/releases) page.
-    * Then call `install_ipopt.sh` with the source directory as the first argument, ex: `bash install_ipopt.sh Ipopt-3.12.1`.
-  * Windows: TODO. If you can use the Linux subsystem and follow the Linux instructions.
+    * You will need version 3.12.1 or higher of Ipopt. The version available through `apt-get` is 3.11.x. If you can get that version to work, great, but if not there's a script `install_ipopt.sh` that will install Ipopt. You just need to download the source from the [Ipopt releases page](https://www.coin-or.org/download/source/Ipopt/) or the [Github releases page](https://github.com/coin-or/Ipopt/releases).
+    * Then call `install_ipopt.sh` with the source directory as the first argument, e.g.: `bash install_ipopt.sh Ipopt-3.12.1`.
+  * Windows: TODO. If you can, use the Linux subsystem and follow the Linux instructions.
 * [CppAD](https://www.coin-or.org/CppAD/)
   * Mac: `brew install cppad`
   * Linux `sudo apt-get install cppad` or equivalent.
-  * Windows: TODO. If you can use the Linux subsystem and follow the Linux instructions.
+  * Windows: TODO. If you can, use the Linux subsystem and follow the Linux instructions.
 * [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page). This is already part of the repo so you shouldn't have to worry about it.
-* The simulator which you can download from [here](https://github.com/udacity/self-driving-car-sim/releases).
+* The simulator, which you can download from [here](https://github.com/udacity/self-driving-car-sim/releases).
 
 ## 2. Basic Build Instructions
 
